@@ -14,16 +14,14 @@ const leaderboardController = {
 		try {
 			const { startDate, endDate } = req.query;
 
+			// ❗ FIXED: removed filters so ALL games return
 			const params = {
 				userId: process.env.USER_ID,
-				categories: "slots,provably fair", // Slots & House games only
-				providers: "-dice", // Exclude dice games
 			};
 
 			if (startDate) params.startDate = startDate;
 			if (endDate) params.endDate = endDate;
 
-			// ✅ Call Roobet Affiliate API directly
 			const response = await axios.get(
 				`${process.env.API_BASE_URL}/affiliate/v2/stats`,
 				{
@@ -34,12 +32,11 @@ const leaderboardController = {
 				}
 			);
 
-			// ✅ Use weightedWagered directly from Roobet
 			const processedData = response.data.map((player) => ({
 				uid: player.uid,
 				username: blurUsername(player.username),
 				wagered: player.wagered,
-				weightedWagered: player.weightedWagered, // ✅ direct from API
+				weightedWagered: player.weightedWagered,
 				favoriteGameId: player.favoriteGameId,
 				favoriteGameTitle: player.favoriteGameTitle,
 				rankLevel: player.rankLevel,
@@ -47,12 +44,11 @@ const leaderboardController = {
 				highestMultiplier: player.highestMultiplier,
 			}));
 
-			// ✅ Sort descending by weighted wager
 			processedData.sort((a, b) => b.weightedWagered - a.weightedWagered);
 
 			const leaderboardWithDisclosure = {
 				disclosure:
-					"Weighted wager values are provided directly by Roobet's Affiliate API and reflect official contribution weighting based on RTP and game category. Only Slots and House Games (excluding Dice) are counted.",
+					"All games are included. Weighted wager values come directly from Roobet’s Affiliate API.",
 				data: processedData,
 			};
 
@@ -72,8 +68,6 @@ const leaderboardController = {
 
 			const params = {
 				userId: process.env.USER_ID,
-				categories: "slots,provably fair",
-				providers: "-dice",
 				startDate,
 				endDate,
 			};
@@ -92,7 +86,7 @@ const leaderboardController = {
 				uid: player.uid,
 				username: blurUsername(player.username),
 				wagered: player.wagered,
-				weightedWagered: player.weightedWagered, // ✅ API-provided field
+				weightedWagered: player.weightedWagered,
 				favoriteGameId: player.favoriteGameId,
 				favoriteGameTitle: player.favoriteGameTitle,
 				rankLevel: player.rankLevel,
@@ -104,7 +98,7 @@ const leaderboardController = {
 
 			const leaderboardWithDisclosure = {
 				disclosure:
-					"Weighted wager values are directly provided by Roobet’s Affiliate API to prevent leaderboard manipulation. Only Slots and House Games count (dice excluded).",
+					"All games included. Weighted wager values are provided directly by Roobet.",
 				data: processedData,
 			};
 
